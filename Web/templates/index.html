@@ -1,8 +1,42 @@
-<form action="/predict" method="post" style="display: flex;">
-  <input type="text" name="inbound_rate" placeholder="Inbound Rate" required>
-  <input type="text" name="outbound_rate" placeholder="Outbound Rate" required>
-  <input type="text" name="inbound_util" placeholder="Inbound Util %" required>
-  <input type="text" name="outbound_util" placeholder="Outbound Util %" required>
-  <button type="submit">Predict Congestion</button>
-</form>
-<h3>{{ prediction_text }}</h3>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Congestion Detector</title>
+    <style>
+        body { font-family: Arial; background: #f4f4f4; padding: 30px; }
+       .box { background: white; max-width: 500px; margin: auto; padding: 25px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+       .result { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; }
+       .normal { background: #d4edda; color: #155724; }
+       .congested { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Network Congestion Detector</h2>
+        <form action="/predict" method="post">
+            <label>Packets per sec</label>
+            <input type="number" step="any" name="packets_per_sec" required>
+
+            <label>Avg Packet Size</label>
+            <input type="number" step="any" name="avg_packet_size" required>
+
+            <label>Latency (ms)</label>
+            <input type="number" step="any" name="latency_ms" required>
+
+            <label>Bandwidth Utilization</label>
+            <input type="number" step="any" name="bandwidth_util" required>
+
+            <button type="submit">Predict</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result {% if 'NORMAL' in prediction %}normal{% else %}congested{% endif %}">
+            Result: {{ prediction }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

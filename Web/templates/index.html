@@ -17,17 +17,17 @@
     <div class="box">
         <h2>Network Congestion Detector</h2>
         <form action="/predict" method="post">
-            <label>Packets per sec</label>
-            <input type="number" step="any" name="packets_per_sec" required>
+            <label>Inbound Rate (bit/s)</label>
+            <input type="number" step="any" name="inbound_rate" required>
 
-            <label>Avg Packet Size</label>
-            <input type="number" step="any" name="avg_packet_size" required>
+            <label>Outbound Rate (bit/s)</label>
+            <input type="number" step="any" name="outbound_rate" required>
 
-            <label>Latency (ms)</label>
-            <input type="number" step="any" name="latency_ms" required>
+            <label>Inbound Bandwidth Utilization (%)</label>
+            <input type="number" step="any" name="inbound_bw" required>
 
-            <label>Bandwidth Utilization</label>
-            <input type="number" step="any" name="bandwidth_util" required>
+            <label>Outbound Bandwidth Utilization (%)</label>
+            <input type="number" step="any" name="outbound_bw" required>
 
             <button type="submit">Predict</button>
         </form>

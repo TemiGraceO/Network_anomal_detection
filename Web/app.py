@@ -17,12 +17,11 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # These 4 names MUST match your input fields in HTML
         data = {
-            'packets_per_sec': float(request.form.get('packets_per_sec', 0)),
-            'avg_packet_size': float(request.form.get('avg_packet_size', 0)),
-            'latency_ms': float(request.form.get('latency_ms', 0)),
-            'bandwidth_util': float(request.form.get('bandwidth_util', 0))
+            'Inbound Rate(bit/s)': float(request.form.get('inbound_rate', 0)),
+            'Outbound Rate(bit/s)': float(request.form.get('outbound_rate', 0)),
+            'Inbound Bandwidth Utilization(%)': float(request.form.get('inbound_bw', 0)),
+            'Outbound Bandwidth Utilization(%)': float(request.form.get('outbound_bw', 0))
         }
 
         df = pd.DataFrame([data])

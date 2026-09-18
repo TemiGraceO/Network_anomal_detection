@@ -1,0 +1,8 @@
+<form action="/predict" method="post">
+  <input type="text" name="inbound_rate" placeholder="Inbound Rate" required>
+  <input type="text" name="outbound_rate" placeholder="Outbound Rate" required>
+  <input type="text" name="inbound_util" placeholder="Inbound Util %" required>
+  <input type="text" name="outbound_util" placeholder="Outbound Util %" required>
+  <button type="submit">Predict Congestion</button>
+</form>
+<h3>{{ prediction_text }}</h3>

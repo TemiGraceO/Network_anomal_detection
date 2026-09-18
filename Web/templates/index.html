@@ -1,42 +1,513 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Congestion Detector</title>
+
     <style>
-        body { font-family: Arial; background: #f4f4f4; padding: 30px; }
-       .box { background: white; max-width: 500px; margin: auto; padding: 25px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-        input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #0056b3; }
-       .result { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; }
-       .normal { background: #d4edda; color: #155724; }
-       .congested { background: #f8d7da; color: #721c24; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --text: #172033;
+            --muted: #64748b;
+            --border: #dbe3ee;
+            --surface: #ffffff;
+            --background: #f1f5f9;
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            --success-border: #86efac;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --danger-border: #fca5a5;
+            --shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, #dbeafe 0%, transparent 34%),
+                radial-gradient(circle at bottom right, #e0f2fe 0%, transparent 30%),
+                var(--background);
+        }
+
+        .page-wrapper {
+            width: min(100%, 1200px);
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 32px 20px;
+            display: grid;
+            place-items: center;
+        }
+
+        .box {
+            width: 100%;
+            max-width: 960px;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid rgba(219, 227, 238, 0.9);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .header {
+            padding: 30px 32px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 52%, #2563eb 100%);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 54px;
+            height: 54px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            font-size: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.13);
+        }
+
+        h1,
+        h2,
+        p {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.2;
+        }
+
+        .header p {
+            margin-top: 7px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .intro {
+            margin-bottom: 26px;
+        }
+
+        .intro h2 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .intro p {
+            color: var(--muted);
+            font-size: 0.94rem;
+            line-height: 1.6;
+        }
+
+        form {
+            display: grid;
+            gap: 22px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 46px 12px 14px;
+            color: var(--text);
+            font: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #ffffff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+        }
+
+        input:hover {
+            border-color: #a8b8cf;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+        }
+
+        .unit {
+            position: absolute;
+            top: 50%;
+            right: 13px;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.78rem;
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        .field-help {
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+
+        button {
+            width: 100%;
+            min-height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: #ffffff;
+            font: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), #3b82f6);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32);
+            transform: translateY(-2px);
+        }
+
+        button:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.35);
+            outline-offset: 3px;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.75;
+            transform: none;
+        }
+
+        .button-icon {
+            font-size: 1.1rem;
+        }
+
+        .result {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 28px;
+            padding: 17px;
+            border: 1px solid;
+            border-radius: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .result-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            font-size: 0.9rem;
+        }
+
+        .result-title {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .normal {
+            color: var(--success-text);
+            border-color: var(--success-border);
+            background: var(--success-bg);
+        }
+
+        .normal .result-icon {
+            color: #ffffff;
+            background: var(--success-text);
+        }
+
+        .congested {
+            color: var(--danger-text);
+            border-color: var(--danger-border);
+            background: var(--danger-bg);
+        }
+
+        .congested .result-icon {
+            color: #ffffff;
+            background: var(--danger-text);
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .spinner {
+            display: none;
+            width: 17px;
+            height: 17px;
+            border: 2px solid rgba(255, 255, 255, 0.45);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        button.is-loading .spinner {
+            display: inline-block;
+        }
+
+        button.is-loading .button-icon {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .page-wrapper {
+                padding: 16px;
+                place-items: start center;
+            }
+
+            .box {
+                border-radius: 16px;
+            }
+
+            .header,
+            .content {
+                padding: 24px 20px;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .header-content {
+                align-items: flex-start;
+            }
+
+            .header-icon {
+                width: 46px;
+                height: 46px;
+                font-size: 22px;
+                border-radius: 12px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .header,
+            .content {
+                padding: 20px 16px;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <div class="box">
-        <h2>Network Congestion Detector</h2>
-        <form action="/predict" method="post">
-            <label>Inbound Rate (bit/s)</label>
-            <input type="number" step="any" name="inbound_rate" required>
+    <main class="page-wrapper">
+        <section class="box" aria-labelledby="page-title">
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-icon" aria-hidden="true">📡</div>
 
-            <label>Outbound Rate (bit/s)</label>
-            <input type="number" step="any" name="outbound_rate" required>
+                    <div>
+                        <h1 id="page-title">Network Congestion Detector</h1>
+                        <p>Enter current network traffic values to check for possible congestion.</p>
+                    </div>
+                </div>
+            </header>
 
-            <label>Inbound Bandwidth Utilization (%)</label>
-            <input type="number" step="any" name="inbound_bw" required>
+            <div class="content">
+                <div class="intro">
+                    <h2>Traffic Details</h2>
+                    <p>Provide the inbound and outbound rate and bandwidth utilization values below.</p>
+                </div>
 
-            <label>Outbound Bandwidth Utilization (%)</label>
-            <input type="number" step="any" name="outbound_bw" required>
+                <!-- Backend route and input names are unchanged -->
+                <form action="/predict" method="post" id="predictionForm">
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="inbound_rate">Inbound Rate</label>
 
-            <button type="submit">Predict</button>
-        </form>
+                            <div class="input-wrapper">
+                                <input
+                                    type="number"
+                                    id="inbound_rate"
+                                    name="inbound_rate"
+                                    step="any"
+                                    min="0"
+                                    placeholder="e.g. 2500000"
+                                    required
+                                >
+                                <span class="unit">bit/s</span>
+                            </div>
 
-        {% if prediction %}
-        <div class="result {% if 'NORMAL' in prediction %}normal{% else %}congested{% endif %}">
-            Result: {{ prediction }}
-        </div>
-        {% endif %}
-    </div>
+                            <small class="field-help">Incoming traffic rate on the network.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="outbound_rate">Outbound Rate</label>
+
+                            <div class="input-wrapper">
+                                <input
+                                    type="number"
+                                    id="outbound_rate"
+                                    name="outbound_rate"
+                                    step="any"
+                                    min="0"
+                                    placeholder="e.g. 1800000"
+                                    required
+                                >
+                                <span class="unit">bit/s</span>
+                            </div>
+
+                            <small class="field-help">Outgoing traffic rate on the network.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inbound_bw">Inbound Bandwidth Utilization</label>
+
+                            <div class="input-wrapper">
+                                <input
+                                    type="number"
+                                    id="inbound_bw"
+                                    name="inbound_bw"
+                                    step="any"
+                                    min="0"
+                                    max="100"
+                                    placeholder="e.g. 72.5"
+                                    required
+                                >
+                                <span class="unit">%</span>
+                            </div>
+
+                            <small class="field-help">Must be a value between 0 and 100.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="outbound_bw">Outbound Bandwidth Utilization</label>
+
+                            <div class="input-wrapper">
+                                <input
+                                    type="number"
+                                    id="outbound_bw"
+                                    name="outbound_bw"
+                                    step="any"
+                                    min="0"
+                                    max="100"
+                                    placeholder="e.g. 68.2"
+                                    required
+                                >
+                                <span class="unit">%</span>
+                            </div>
+
+                            <small class="field-help">Must be a value between 0 and 100.</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="predictButton">
+                        <span class="button-icon" aria-hidden="true">⚡</span>
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span class="button-text">Predict Network Status</span>
+                    </button>
+                </form>
+
+                {% if prediction %}
+                <div
+                    class="result {% if 'NORMAL' in prediction %}normal{% else %}congested{% endif %}"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <div class="result-icon" aria-hidden="true">
+                        {% if 'NORMAL' in prediction %}✓{% else %}!{% endif %}
+                    </div>
+
+                    <div>
+                        <span class="result-title">Prediction Result</span>
+                        <span>{{ prediction }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <p class="footer-note">
+                    Network values are processed when you submit the form.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("predictionForm");
+        const submitButton = document.getElementById("predictButton");
+        const buttonText = submitButton.querySelector(".button-text");
+
+        form.addEventListener("submit", function () {
+            if (form.checkValidity()) {
+                submitButton.classList.add("is-loading");
+                submitButton.disabled = true;
+                buttonText.textContent = "Analyzing Network...";
+            }
+        });
+    </script>
 </body>
 </html>
